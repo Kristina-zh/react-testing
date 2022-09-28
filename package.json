@@ -8,6 +8,7 @@
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@types/styled-components": "^5.1.26",
+    "msw": "^0.47.3",
     "pokenode-ts": "^1.17.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

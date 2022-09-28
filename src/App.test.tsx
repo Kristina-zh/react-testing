@@ -3,8 +3,6 @@ import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 import App from './App';
-import { ResultState } from './components/PokemonGuesser/types';
-import { PokemonGuesserPresentational } from './components/PokemonGuesser/PokemonGuesserPresentational';
 
 describe('App tests', () => {
   it('Render', () => {
@@ -34,24 +32,15 @@ describe('App tests', () => {
     ).toBeInTheDocument();
   });
 
-  it('Loading case', () => {
+  it('User flow test', async () => {
     render(<App />);
+
+    //loading spiner
     const loading = screen.getByTestId('infinity-spin');
     expect(loading).toBeInTheDocument();
-  });
 
-  it('Should render image, input and button', () => {
-    const mockProps = {
-      isLoading: false,
-      onCheck: jest.fn(),
-      onRetry: jest.fn(),
-      state: ResultState.GUESSING,
-      pokemon: {
-        id: 90,
-      },
-    };
-    render(<PokemonGuesserPresentational {...mockProps} />);
-    const image = screen.getByTestId('image');
+    //recieved data from the server
+    const image = await screen.findByTestId('image');
     expect(image).toBeInTheDocument();
     expect(image).toHaveClass('sc-jSMfEi caPBoQ');
 
@@ -61,66 +50,65 @@ describe('App tests', () => {
     expect(input).toBeInTheDocument();
     expect(input.value).toBe('');
 
-    fireEvent.change(input, { target: { value: 'pikachu' } });
-    expect(input.value).toBe('pikachu');
-
     const buttonCheck = screen.getByRole('button', { name: 'Check' });
     expect(buttonCheck).toBeInTheDocument();
+
+    //guessing pockemon - error case
+    fireEvent.change(input, { target: { value: 'pikachu' } });
+    expect(input.value).toBe('pikachu');
     fireEvent.click(buttonCheck);
-    expect(mockProps.onCheck).toBeCalledTimes(1);
-  });
 
-  it('Guessing wrong', () => {
-    const mockProps = {
-      isLoading: false,
-      onCheck: jest.fn(),
-      onRetry: jest.fn(),
-      state: ResultState.ERROR,
-      pokemon: {
-        id: 90,
-      },
-    };
-    render(<PokemonGuesserPresentational {...mockProps} />);
-    const image = screen.getByTestId('image');
-    expect(image).toBeInTheDocument();
+    //error case render
     expect(image).toHaveClass('sc-jSMfEi ciybIA');
-
-    const input = screen.queryByPlaceholderText("Who's that Pokemon?");
     expect(input).not.toBeInTheDocument();
 
     expect(screen.getByText("Oops, That's wrong")).toBeInTheDocument();
     const buttonTryAgain = screen.getByRole('button', { name: 'Try again' });
-    expect(buttonTryAgain).toBeInTheDocument();
-
     fireEvent.click(buttonTryAgain);
-    expect(mockProps.onRetry).toBeCalledTimes(1);
-  });
 
-  it('Guessing right', () => {
-    const mockProps = {
-      isLoading: false,
-      onCheck: jest.fn(),
-      onRetry: jest.fn(),
-      state: ResultState.SUCCESS,
-      pokemon: {
-        id: 90,
-      },
-    };
-    render(<PokemonGuesserPresentational {...mockProps} />);
-    const image = screen.getByTestId('image');
-    expect(image).toBeInTheDocument();
-    expect(image).toHaveClass('sc-jSMfEi ciybIA');
+    //new guessing - reset the page
+    const newImage = await screen.findByTestId('image');
+    expect(newImage).toBeInTheDocument();
+    expect(newImage).toHaveClass('sc-jSMfEi caPBoQ');
 
-    const input = screen.queryByPlaceholderText("Who's that Pokemon?");
-    expect(input).not.toBeInTheDocument();
+    const newInput = screen.getByPlaceholderText(
+      "Who's that Pokemon?"
+    ) as HTMLInputElement;
+    expect(newInput).toBeInTheDocument();
+    expect(newInput.value).toBe('');
 
-    expect(screen.getByText('Excellent!!')).toBeInTheDocument();
-    const buttonKeepPlaying = screen.getByRole('button', {
-      name: 'Keep playing',
-    });
-    expect(buttonKeepPlaying).toBeInTheDocument();
+    const newButtonCheck = screen.getByRole('button', { name: 'Check' });
+    expect(newButtonCheck).toBeInTheDocument();
 
-    fireEvent.click(buttonKeepPlaying);
-    expect(mockProps.onRetry).toBeCalledTimes(1);
+    //guessing pockemon - success case
+    fireEvent.change(newInput, { target: { value: 'gyarados' } });
+    expect(newInput.value).toBe('gyarados');
+    fireEvent.click(newButtonCheck);
+
+    //success case render
+    expect(newImage).toHaveClass('sc-jSMfEi ciybIA');
+    expect(newInput).not.toBeInTheDocument();
+
+    // expect(screen.getByText('Excellent!!')).toBeInTheDocument();
+    // const buttonKeepPlaying = screen.getByRole('button', {
+    //   name: 'Keep playing',
+    // });
+    // expect(buttonKeepPlaying).toBeInTheDocument();
+
+    // fireEvent.click(buttonKeepPlaying);
+
+        //new guessing - reset the page
+        // const newImage2 = await screen.findByTestId('image');
+        // expect(newImage2).toBeInTheDocument();
+        // expect(newImage2).toHaveClass('sc-jSMfEi caPBoQ');
+    
+        // const newInput2 = screen.getByPlaceholderText(
+        //   "Who's that Pokemon?"
+        // ) as HTMLInputElement;
+        // expect(newInput2).toBeInTheDocument();
+        // expect(newInput2.value).toBe('');
+    
+        // const newButtonCheck2 = screen.getByRole('button', { name: 'Check' });
+        // expect(newButtonCheck2).toBeInTheDocument();
   });
 });
